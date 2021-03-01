@@ -54,11 +54,13 @@ foreign import data Producer :: Type
 type ProducerConfig
   = { idempotent :: Maybe Boolean
     , transactionalId :: Maybe String
+    , maxInFlightRequests :: Maybe Int
     }
 
 type InternalProducerConfig
   = { idempotent :: Nullable Boolean
     , transactionalId :: Nullable String
+    , maxInFlightRequests :: Nullable Int
     }
 
 foreign import makeClientImpl :: InternalKafkaConfig -> Kafka
@@ -81,6 +83,7 @@ makeProducer k pc = runFn2 makeProducerImpl k ipc
   ipc =
     { idempotent: toNullable pc.idempotent
     , transactionalId: toNullable pc.transactionalId
+    , maxInFlightRequests : toNullable pc.maxInFlightRequests
     }
 
 foreign import connectImpl :: Producer -> Effect (Promise Unit)
