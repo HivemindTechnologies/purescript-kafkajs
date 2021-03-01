@@ -1,18 +1,18 @@
-module Kafka (
-  SaslConfig
-, Kafka
-, Producer
-, RecordMetadata
-, KafkaConfig
-, ProducerConfig
-, makeClient
-, makeProducer
-, connect
-, Message 
-, Payload
-, send
-, disconnect
-) where
+module Kafka
+  ( SaslConfig
+  , Kafka
+  , Producer
+  , RecordMetadata
+  , KafkaConfig
+  , ProducerConfig
+  , makeClient
+  , makeProducer
+  , connect
+  , Message
+  , Payload
+  , send
+  , disconnect
+  ) where
 
 import Prelude
 import Control.Promise (Promise, toAffE)
@@ -72,19 +72,39 @@ connect :: Producer -> Aff Unit
 connect = connectImpl >>> toAffE
 
 type Message
-  = { value :: String }
+  = { key :: Maybe String
+    , value :: String
+    , partition :: Maybe Int
+    }
 
 type Payload
   = { topic :: String
     , messages :: Array (Message)
     }
 
+type InternalMessage
+  = { key :: Nullable String
+    , value :: String
+    , partition :: Nullable Int
+    }
+
+type InternalPayload
+  = { topic :: String
+    , messages :: Array (InternalMessage)
+    }
+
 foreign import data RecordMetadata :: Type
 
-foreign import sendImpl :: Fn2 Producer Payload (Effect (Promise (Array RecordMetadata)))
+foreign import sendImpl :: Fn2 Producer InternalPayload (Effect (Promise (Array RecordMetadata)))
 
 send :: Producer -> Payload -> Aff (Array RecordMetadata)
-send p pl = runFn2 sendImpl p pl # toAffE
+send p pl = runFn2 sendImpl p (convert pl) # toAffE
+  where
+  convertMessage :: Message -> InternalMessage
+  convertMessage { key, value, partition } = { key: toNullable key, value: value, partition: toNullable partition }
+
+  convert :: Payload -> InternalPayload
+  convert { topic, messages } = { topic, messages: messages <#> convertMessage }
 
 foreign import disconnectImpl :: Producer -> Effect (Promise Unit)
 
