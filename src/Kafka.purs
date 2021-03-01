@@ -9,6 +9,7 @@ module Kafka
   , makeClient
   , makeProducer
   , connect
+  , transaction
   , Message
   , Payload
   , send
