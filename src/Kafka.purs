@@ -71,6 +71,23 @@ foreign import connectImpl :: Producer -> Effect (Promise Unit)
 connect :: Producer -> Aff Unit
 connect = connectImpl >>> toAffE
 
+foreign import data Transaction :: Type 
+
+foreign import transactionImpl :: Producer -> Effect (Promise Transaction)
+
+transaction :: Producer -> Aff Transaction
+transaction = transactionImpl >>> toAffE
+
+foreign import commitImpl :: Transaction -> Effect (Promise Unit)
+
+commit :: Transaction -> Aff Unit 
+commit = commitImpl >>> toAffE
+
+foreign import abortImpl :: Transaction -> Effect (Promise Unit)
+
+abort :: Transaction -> Aff Unit 
+abort = abortImpl >>> toAffE
+
 type Message
   = { key :: Maybe String
     , value :: String
@@ -97,14 +114,20 @@ foreign import data RecordMetadata :: Type
 
 foreign import sendImpl :: Fn2 Producer InternalPayload (Effect (Promise (Array RecordMetadata)))
 
+foreign import sendTImpl :: Fn2 Transaction InternalPayload (Effect (Promise (Array RecordMetadata)))
+
+convertMessage :: Message -> InternalMessage
+convertMessage { key, value, partition } = { key: toNullable key, value: value, partition: toNullable partition }
+
+convert :: Payload -> InternalPayload
+convert { topic, messages } = { topic, messages: messages <#> convertMessage }
+
+
 send :: Producer -> Payload -> Aff (Array RecordMetadata)
 send p pl = runFn2 sendImpl p (convert pl) # toAffE
-  where
-  convertMessage :: Message -> InternalMessage
-  convertMessage { key, value, partition } = { key: toNullable key, value: value, partition: toNullable partition }
 
-  convert :: Payload -> InternalPayload
-  convert { topic, messages } = { topic, messages: messages <#> convertMessage }
+sendT :: Transaction -> Payload -> Aff (Array RecordMetadata)
+sendT t pl = runFn2 sendTImpl t (convert pl) # toAffE
 
 foreign import disconnectImpl :: Producer -> Effect (Promise Unit)
 
