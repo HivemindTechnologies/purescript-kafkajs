@@ -52,7 +52,14 @@ type KafkaConfig
 foreign import data Producer :: Type
 
 type ProducerConfig
-  = {}
+  = { idempotent :: Maybe Boolean
+    , transactionalId :: Maybe String
+    }
+
+type InternalProducerConfig
+  = { idempotent :: Nullable Boolean
+    , transactionalId :: Nullable String
+    }
 
 foreign import makeClientImpl :: InternalKafkaConfig -> Kafka
 
@@ -66,17 +73,22 @@ makeClient = toInternal >>> makeClientImpl
     , sasl: toNullable config.sasl
     }
 
-foreign import makeProducerImpl :: Fn2 Kafka ProducerConfig Producer
+foreign import makeProducerImpl :: Fn2 Kafka InternalProducerConfig Producer
 
 makeProducer :: Kafka -> ProducerConfig -> Producer
-makeProducer = runFn2 makeProducerImpl
+makeProducer k pc = runFn2 makeProducerImpl k ipc
+  where
+  ipc =
+    { idempotent: toNullable pc.idempotent
+    , transactionalId: toNullable pc.transactionalId
+    }
 
 foreign import connectImpl :: Producer -> Effect (Promise Unit)
 
 connect :: Producer -> Aff Unit
 connect = connectImpl >>> toAffE
 
-foreign import data Transaction :: Type 
+foreign import data Transaction :: Type
 
 foreign import transactionImpl :: Producer -> Effect (Promise Transaction)
 
@@ -85,12 +97,12 @@ transaction = transactionImpl >>> toAffE
 
 foreign import commitImpl :: Transaction -> Effect (Promise Unit)
 
-commit :: Transaction -> Aff Unit 
+commit :: Transaction -> Aff Unit
 commit = commitImpl >>> toAffE
 
 foreign import abortImpl :: Transaction -> Effect (Promise Unit)
 
-abort :: Transaction -> Aff Unit 
+abort :: Transaction -> Aff Unit
 abort = abortImpl >>> toAffE
 
 type Message
@@ -126,7 +138,6 @@ convertMessage { key, value, partition } = { key: toNullable key, value: value, 
 
 convert :: Payload -> InternalPayload
 convert { topic, messages } = { topic, messages: messages <#> convertMessage }
-
 
 send :: Producer -> Payload -> Aff (Array RecordMetadata)
 send p pl = runFn2 sendImpl p (convert pl) # toAffE
