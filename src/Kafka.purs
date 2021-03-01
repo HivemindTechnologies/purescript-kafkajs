@@ -2,6 +2,7 @@ module Kafka
   ( SaslConfig
   , Kafka
   , Producer
+  , Transaction
   , RecordMetadata
   , KafkaConfig
   , ProducerConfig
@@ -11,6 +12,9 @@ module Kafka
   , Message
   , Payload
   , send
+  , sendT
+  , abort
+  , commit
   , disconnect
   ) where
 
