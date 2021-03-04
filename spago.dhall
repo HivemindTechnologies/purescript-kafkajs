@@ -4,7 +4,16 @@ You can edit this file as you like.
 -}
 { name = "purescript-kafkajs"
 , dependencies =
-  [ "aff-promise", "console", "effect", "nullable", "psci-support" ]
+  [ "aff-promise"
+  , "console"
+  , "debug"
+  , "effect"
+  , "maybe"
+  , "node-buffer"
+  , "nullable"
+  , "psci-support"
+  , "spec"
+  ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
 , license = "MIT"
