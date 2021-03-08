@@ -9,8 +9,8 @@ docker-compose up -d
 ## Transactional producer consumer
 
 Install everything
-```bash 
-npm install 
+```bash
+cd transactional-producer-consumer && npm install 
 ```
 
 Run a producer in a terminal.
