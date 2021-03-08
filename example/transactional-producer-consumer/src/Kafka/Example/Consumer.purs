@@ -17,14 +17,13 @@ import Effect.Class (liftEffect)
 import Effect.Class.Console (logShow)
 import Node.Buffer (toString)
 import Node.Encoding (Encoding(..))
+import Data.Functor (void)
 
 printAndResolve :: ResolveOffset -> ConsumerMessage -> Aff Unit
 printAndResolve resolveOffset { value, offset } = do
-  value <- liftEffect $ toString UTF8 value
-  _ <- logShow $ "Got message: " <> value
+  v <- liftEffect $ toString UTF8 value
+  logShow $ "Got message: " <> v
   liftEffect $ resolveOffset offset
-
-  
 
 main :: Effect (Promise Unit)
 main =
@@ -33,20 +32,14 @@ main =
         let
           kafka = makeClient { clientId: "transactional-consumer", brokers: [ "localhost:9092" ], ssl: false, sasl: Nothing }
 
-          consumerConfig = { groupId: "transactional-group", readUncommitted: false, autoCommit: false } 
-          
-          consumer = makeConsumer kafka consumerConfig
+          consumerConfig = { groupId: "transactional-group", readUncommitted: false, autoCommit: false }
 
-        connect consumer 
+          consumer = makeConsumer kafka consumerConfig
+        connect consumer
         subscribe consumer { topic: "transactions" }
         let
           handler :: EachBatch
           handler { highWatermark, messages } resolveOffset heartBeat commitIfNecessary uncommittedOffsets isRunning isStale = do
-        
-            _ <- traverse (printAndResolve resolveOffset) messages :: Aff (Array Unit)
+            void $ traverse (printAndResolve resolveOffset) messages
             heartBeat
-
         eachBatch consumer false handler
-        
-
-          

@@ -1,6 +1,6 @@
 module Kafka.Example.Producer where
 
-import Prelude (Unit, (>>>), (#), (<#>), bind, ($), (<>), pure, unit, (*>), (+))
+import Prelude (Unit, (>>>), (#), (<#>), bind, ($), (<>), pure, unit, (*>), (+), discard)
 import Control.Promise (Promise, toAffE, fromAff)
 import Effect (Effect)
 import Kafka.Producer (connect, disconnect, Producer, makeProducer, ProducerConfig)
@@ -52,5 +52,5 @@ main =
 
           release :: Producer -> Aff Unit
           release = disconnect
-        _ <- bracket (acquire kafka producerConfig) release (use 0)
+        bracket (acquire kafka producerConfig) release (use 0)
         pure unit
