@@ -1,25 +1,41 @@
-module Kafka.Consumer where
+module Kafka.Consumer
+  ( Consumer
+  , ConsumerConfig
+  , SubscriptionConfig
+  , makeConsumer
+  , connect
+  , subscribe
+  , ConsumerMessage
+  , ConsumerBatch
+  , Heartbeat
+  , ResolveOffset
+  , CommitOffsetsIfNecessary
+  , OffsetInfo
+  , toOffsetInfo
+  , UncommittedOffsets
+  , IsStale
+  , IsRunning
+  , EachBatch
+  , eachBatch
+  , disconnect
+  ) where
 
-import Prelude (Unit, (>>>), (#), (<#>), bind, ($), (<>))
+import Prelude (Unit, bind, (#), ($), (>>>))
 import Control.Promise (Promise, toAffE, fromAff)
 import Kafka.Kafka (Kafka)
 import Data.Function.Uncurried (Fn2, Fn3, Fn7, mkFn7, runFn2, runFn3)
 import Effect (Effect)
-import Effect.Class (liftEffect)
 import Effect.Aff (Aff)
-import Kafka.Internal.Internal (InternalOutputMessage)
 import Kafka.Types
-import Data.Nullable (Nullable, toNullable, toMaybe)
+import Data.Nullable (Nullable, toMaybe)
 import Node.Buffer (Buffer)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe, maybe)
 import Data.Traversable (traverse)
-import Node.Buffer (toString)
-import Node.Encoding (Encoding(..))
-import Control.Monad.Error.Class (class MonadThrow, throwError)
-import Effect.Exception (error, Error)
+import Control.Monad.Error.Class (throwError)
+import Effect.Exception (error)
 import Data.Int (fromString)
 import Control.Applicative (pure)
-import Data.Either (Either(..), note, either)
+import Data.Either (Either, either, note)
 import Data.Newtype (un)
 
 foreign import data Consumer :: Type

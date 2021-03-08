@@ -14,6 +14,7 @@ import Effect.Class.Console (log)
 import Data.Time.Duration (Milliseconds(..))
 import Effect.Random (randomBool)
 import Effect.Class (liftEffect)
+import Kafka.Types (Topic(..))
 
 -- | Send 10 messages every 5 seconds and randomly abort or commit
 use :: Int -> Producer -> Aff Unit
@@ -22,7 +23,7 @@ use run producer = do
   condition <- liftEffect $ randomBool
   _ <-
     send trx
-      { topic: "transactions"
+      { topic: Topic "transactions"
       , messages:
           [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
             <#> \i ->

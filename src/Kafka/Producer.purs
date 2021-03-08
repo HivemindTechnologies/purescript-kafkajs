@@ -1,14 +1,29 @@
-module Kafka.Producer where
+module Kafka.Producer
+  ( Producer
+  , ProducerConfig
+  , makeProducer
+  , connect
+  , ProducerMessage
+  , ProducerBatch
+  , InternalProducerMessage
+  , InternalProducerBatch
+  , toInternalProducerMessage
+  , toInternalProducerBatch
+  , RecordMetadata
+  , send
+  , disconnect
+  ) where
 
-import Prelude (Unit, (#), (>>>))
+import Prelude (Unit, (#), (>>>), (<#>))
 import Control.Promise (Promise, toAffE)
 import Data.Function.Uncurried (Fn2, runFn2)
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toNullable)
 import Effect (Effect)
 import Effect.Aff (Aff)
-import Kafka.Kafka (Kafka, Payload, RecordMetadata)
-import Kafka.Internal.Internal (InternalPayload, convert)
+import Kafka.Kafka (Kafka)
+import Kafka.Types (Partition(..), Topic(..))
+import Data.Newtype (un)
 
 foreign import data Producer :: Type
 
@@ -32,7 +47,7 @@ makeProducer k pc = runFn2 makeProducerImpl k ipc
   ipc =
     { idempotent: toNullable pc.idempotent
     , transactionalId: toNullable pc.transactionalId
-    , maxInFlightRequests : toNullable pc.maxInFlightRequests
+    , maxInFlightRequests: toNullable pc.maxInFlightRequests
     }
 
 foreign import connectImpl :: Producer -> Effect (Promise Unit)
@@ -40,10 +55,40 @@ foreign import connectImpl :: Producer -> Effect (Promise Unit)
 connect :: Producer -> Aff Unit
 connect = connectImpl >>> toAffE
 
-foreign import sendImpl :: Fn2 Producer InternalPayload (Effect (Promise (Array RecordMetadata)))
+type ProducerMessage
+  = { key :: Maybe String
+    , value :: String
+    , partition :: Maybe Partition
+    }
 
-send :: Producer -> Payload -> Aff (Array RecordMetadata)
-send p pl = runFn2 sendImpl p (convert pl) # toAffE
+type ProducerBatch
+  = { topic :: Topic
+    , messages :: Array (ProducerMessage)
+    }
+
+foreign import data RecordMetadata :: Type
+
+type InternalProducerMessage
+  = { key :: Nullable String
+    , value :: String
+    , partition :: Nullable Int
+    }
+
+type InternalProducerBatch
+  = { topic :: String
+    , messages :: Array (InternalProducerMessage)
+    }
+
+toInternalProducerMessage :: ProducerMessage -> InternalProducerMessage
+toInternalProducerMessage { key, value, partition: partition } = { key: toNullable key, value: value, partition: partition <#> un Partition # toNullable }
+
+toInternalProducerBatch :: ProducerBatch -> InternalProducerBatch
+toInternalProducerBatch { topic: Topic topic, messages } = { topic, messages: messages <#> toInternalProducerMessage }
+
+foreign import sendImpl :: Fn2 Producer InternalProducerBatch (Effect (Promise (Array RecordMetadata)))
+
+send :: Producer -> ProducerBatch -> Aff (Array RecordMetadata)
+send p pl = runFn2 sendImpl p (toInternalProducerBatch pl) # toAffE
 
 foreign import disconnectImpl :: Producer -> Effect (Promise Unit)
 

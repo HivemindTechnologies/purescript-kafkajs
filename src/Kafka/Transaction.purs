@@ -1,14 +1,17 @@
-module Kafka.Transaction where
-
+module Kafka.Transaction
+  ( Transaction
+  , transaction
+  , commit
+  , abort
+  , send
+  ) where
 
 import Prelude (Unit, (#), (>>>))
 import Control.Promise (Promise, toAffE)
 import Data.Function.Uncurried (Fn2, runFn2)
 import Effect (Effect)
 import Effect.Aff (Aff)
-import Kafka.Producer (Producer)
-import Kafka.Internal.Internal (InternalPayload, convert)
-import Kafka.Kafka (Payload, RecordMetadata)
+import Kafka.Producer (InternalProducerBatch, Producer, ProducerBatch, RecordMetadata, toInternalProducerBatch)
 
 foreign import data Transaction :: Type
 
@@ -27,7 +30,7 @@ foreign import abortImpl :: Transaction -> Effect (Promise Unit)
 abort :: Transaction -> Aff Unit
 abort = abortImpl >>> toAffE
 
-foreign import sendImpl :: Fn2 Transaction InternalPayload (Effect (Promise (Array RecordMetadata)))
+foreign import sendImpl :: Fn2 Transaction InternalProducerBatch (Effect (Promise (Array RecordMetadata)))
 
-send :: Transaction -> Payload -> Aff (Array RecordMetadata)
-send t pl = runFn2 sendImpl t (convert pl) # toAffE
+send :: Transaction -> ProducerBatch -> Aff (Array RecordMetadata)
+send t pl = runFn2 sendImpl t (toInternalProducerBatch pl) # toAffE
