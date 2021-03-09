@@ -1,0 +1,27 @@
+{
+    "name": "purescript-kafkajs",
+    "license": [
+        "MIT"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/HivemindTechnologies/purescript-kafkajs.git"
+    },
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "output"
+    ],
+    "dependencies": {
+        "purescript-aff-promise": "^v2.1.0",
+        "purescript-console": "^v5.0.0",
+        "purescript-debug": "^v4.0.1",
+        "purescript-effect": "^v3.0.0",
+        "purescript-maybe": "^v5.0.0",
+        "purescript-node-buffer": "^v7.0.0",
+        "purescript-nullable": "^v5.0.0",
+        "purescript-psci-support": "^v5.0.0",
+        "purescript-spec": "^v5.0.0"
+    }
+}
