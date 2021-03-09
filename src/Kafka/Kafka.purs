@@ -1,11 +1,8 @@
 module Kafka.Kafka
   ( SaslConfig
   , Kafka
-  , RecordMetadata
   , KafkaConfig
   , makeClient
-  , Message
-  , Payload
   ) where
 
 import Prelude
@@ -48,20 +45,6 @@ makeClient = toInternal >>> makeClientImpl
     , sasl: toNullable config.sasl
     }
 
-
-type Message
-  = { key :: Maybe String
-    , value :: String
-    , partition :: Maybe Int
-    }
-
-type Payload
-  = { topic :: String
-    , messages :: Array (Message)
-    }
-
-
-foreign import data RecordMetadata :: Type
 
 
 
