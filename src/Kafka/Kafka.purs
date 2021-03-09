@@ -31,8 +31,6 @@ type KafkaConfig
     , sasl :: Maybe SaslConfig
     }
 
-
-
 foreign import makeClientImpl :: InternalKafkaConfig -> Kafka
 
 makeClient :: KafkaConfig -> Kafka
@@ -44,7 +42,3 @@ makeClient = toInternal >>> makeClientImpl
     , ssl: config.ssl
     , sasl: toNullable config.sasl
     }
-
-
-
-
