@@ -1,8 +1,10 @@
 
 
+exports.transactionImpl = (producer) => () => producer.transaction()
+
 exports.sendImpl = (transaction, data) => () => transaction.send(data)
 
-exports.transactionImpl = (producer) => () => producer.transaction()
+exports.sendOffsetsImpl = (transaction, sendOffsets) => () => transaction.sendOffsets(sendOffsets)
 
 exports.commitImpl = (transaction) => () => transaction.commit()
 

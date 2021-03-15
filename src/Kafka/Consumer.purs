@@ -1,5 +1,6 @@
 module Kafka.Consumer
   ( Consumer
+  , GroupId(..)
   , ConsumerConfig
   , SubscriptionConfig
   , makeConsumer
@@ -26,6 +27,7 @@ import Kafka.Kafka (Kafka)
 import Data.Function.Uncurried (Fn2, Fn3, Fn7, mkFn7, runFn2, runFn3)
 import Effect (Effect)
 import Effect.Aff (Aff)
+import Data.Show (class Show)
 import Kafka.Types
 import Data.Nullable (Nullable, toMaybe)
 import Node.Buffer (Buffer)
@@ -36,12 +38,19 @@ import Effect.Exception (error)
 import Data.Int (fromString)
 import Control.Applicative (pure)
 import Data.Either (Either, either, note)
-import Data.Newtype (un)
+import Data.Newtype (un, class Newtype)
 
 foreign import data Consumer :: Type
 
+newtype GroupId
+  = GroupId String
+  
+instance ntGroupId :: Newtype GroupId String
+
+derive newtype instance showGroupId :: Show GroupId
+
 type ConsumerConfig
-  = { groupId :: String
+  = { groupId :: GroupId
     , readUncommitted :: Boolean
     , autoCommit :: Boolean
     }
